@@ -216,11 +216,12 @@ body[dir="rtl"] .toast{transform:translateX(50%)}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-/* ================= CONFIG ================= */
+/* ================= CONFIG (baked in — SFC-visitors project) ================= */
+const SUPABASE_URL='https://gsjyuakhxekyknxfropa.supabase.co';
+const SUPABASE_KEY='sb_publishable_OpqlgvWxFRMbSrKUt6HXtA_MSeIfFHn';
 const CFG_KEY='sfc_visitors_cfg';
-let CFG=null; try{ CFG=JSON.parse(localStorage.getItem(CFG_KEY)||'null'); }catch(e){}
-let sb=null;
-if(CFG&&CFG.url&&CFG.key){ sb=window.supabase.createClient(CFG.url,CFG.key); }
+let CFG={url:SUPABASE_URL,key:SUPABASE_KEY};
+let sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
 /* ================= I18N ================= */
 let LANG=localStorage.getItem('sfc_visitors_lang')||'ar';
@@ -344,7 +345,6 @@ async function loadAudit(){const{data}=await sb.from('audit_log').select('*').or
 
 /* ================= AUTH / BOOT ================= */
 async function boot(){
-  if(!sb){renderSetup();return;}
   const {data:{session}}=await sb.auth.getSession();
   if(session)await onLogin(session);else renderLogin();
   sb.auth.onAuthStateChange((_e,s)=>{if(!s){SESSION=null;renderLogin();}});
@@ -365,7 +365,7 @@ async function doLogin(){
   await onLogin(data.session);
 }
 async function doLogout(){await sb.auth.signOut();SESSION=null;renderLogin();}
-function rerender(){ if(!CFG||!sb){renderSetup();} else if(!SESSION){renderLogin();} else renderApp(); }
+function rerender(){ if(!SESSION){renderLogin();} else renderApp(); }
 
 /* ================= SETUP SCREEN ================= */
 function renderSetup(){
