@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سجل زوار القارة · جمعية أصدقاء السعودية</title>
+<style>
+/* ============================================================
+   SFC Al-Qara Visitors — design tokens (SFC app standard)
+   ============================================================ */
+:root{
+  --green:#3f8f52;
+  --green-deep:#2c6b3c;
+  --green-soft:#e8f2ea;
+  --green-line:#cfe4d4;
+  --sand:#f6f4ee;
+  --card:#ffffff;
+  --ink:#20302a;
+  --ink-soft:#5c6b63;
+  --gold:#c79a3d;
+  --blue:#2f6f9f;
+  --danger:#c0492f;
+  --line:#e4e6e1;
+  --radius:14px;
+  --shadow:0 1px 2px rgba(32,48,42,.06),0 8px 24px rgba(32,48,42,.06);
+  --font: "Segoe UI", "Tahoma", system-ui, sans-serif;
+}
+body.dark{
+  --green:#4ea365;
+  --green-deep:#2f6b3f;
+  --green-soft:#1e2c24;
+  --green-line:#2c4536;
+  --sand:#141a17;
+  --card:#1b231e;
+  --ink:#e7ede9;
+  --ink-soft:#93a29a;
+  --gold:#d4a94a;
+  --blue:#5a97c4;
+  --danger:#e0674c;
+  --line:#2a332d;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+}
+body.dark .lang-toggle,body.dark .theme-btn,body.dark .filter-bar select,body.dark .filter-bar input{background:#222b25;border-color:var(--line)}
+body.dark input,body.dark select,body.dark textarea{background:#222b25;color:var(--ink)}
+body.dark .modal{background:var(--card)}
+body.dark .tbl tr:hover td{background:#212a24}
+body.dark .toast{background:#0d120f}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:var(--font);background:var(--sand);color:var(--ink);line-height:1.55;-webkit-font-smoothing:antialiased}
+body[dir="ltr"]{text-align:left}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit}
+h1,h2,h3{line-height:1.2;font-weight:800}
+
+/* ---------- layout shell ---------- */
+.app{display:flex;min-height:100vh}
+.sidebar{width:248px;flex-shrink:0;background:var(--green-deep);color:#eaf3ec;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
+.brand{padding:22px 20px 16px;border-bottom:1px solid rgba(255,255,255,.12)}
+.brand .logo{display:flex;align-items:center;gap:11px}
+.brand .mark{width:38px;height:38px;flex-shrink:0}
+.brand h1{font-size:15px;color:#fff;letter-spacing:.2px}
+.brand .sub{font-size:11px;color:#a9cdb2;margin-top:2px;font-weight:600;letter-spacing:.4px}
+.nav{padding:12px 10px;flex:1}
+.nav .group-label{font-size:10.5px;color:#84b291;text-transform:uppercase;letter-spacing:1px;padding:12px 12px 6px;font-weight:700}
+.nav button{display:flex;align-items:center;gap:10px;width:100%;text-align:inherit;background:transparent;border:0;color:#d3e6d8;padding:9px 12px;border-radius:9px;font-size:13.5px;font-weight:600;margin-bottom:2px;transition:.15s}
+.nav button:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav button.active{background:var(--green);color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.nav .ico{width:19px;height:19px;flex-shrink:0;opacity:.92;stroke-width:1.9}
+.sidebar-foot{padding:14px;border-top:1px solid rgba(255,255,255,.12);font-size:11px;color:#9ec3a6}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex-shrink:0}
+.btn-signout{width:100%;background:rgba(255,255,255,.1);color:#eaf3ec;border:1px solid rgba(255,255,255,.18);border-radius:9px;padding:8px;font-size:12.5px;font-weight:700;cursor:pointer}
+.btn-signout:hover{background:rgba(255,255,255,.18)}
+
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{background:var(--card);border-bottom:1px solid var(--line);padding:14px 26px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:20;flex-wrap:wrap}
+.topbar .page-title{font-size:19px;font-weight:800}
+.topbar .spacer{flex:1}
+.lang-toggle{display:flex;background:var(--sand);border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.lang-toggle button{padding:6px 12px;border:0;background:transparent;font-size:12px;font-weight:700;color:var(--ink-soft)}
+.lang-toggle button.on{background:var(--green);color:#fff}
+.theme-btn{display:flex;align-items:center;justify-content:center;width:36px;height:34px;background:var(--sand);border:1px solid var(--line);border-radius:9px;color:var(--ink-soft);cursor:pointer;transition:.15s;flex-shrink:0}
+.theme-btn:hover{color:var(--green);border-color:var(--green)}
+.theme-btn svg{width:19px;height:19px;display:block}
+.theme-btn .ico-moon{display:none}
+body.dark .theme-btn .ico-sun{display:none}
+body.dark .theme-btn .ico-moon{display:block}
+.content{padding:26px;max-width:1180px;width:100%;margin:0 auto}
+
+/* ---------- buttons ---------- */
+.btn{border:0;border-radius:10px;padding:9px 16px;font-size:13.5px;font-weight:700;transition:.15s;display:inline-flex;align-items:center;gap:7px}
+.btn-primary{background:var(--green);color:#fff}
+.btn-primary:hover{background:var(--green-deep)}
+.btn-ghost{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+.btn-ghost:hover{border-color:var(--green);color:var(--green)}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-sm{padding:5px 10px;font-size:12px;border-radius:8px}
+.btn .ico{width:16px;height:16px}
+
+/* ---------- cards / stats ---------- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin-bottom:20px}
+.card h2{font-size:15.5px;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.card h2 .ico{width:18px;height:18px;color:var(--green)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 18px;position:relative;overflow:hidden}
+.stat::before{content:"";position:absolute;inset-inline-start:0;top:0;bottom:0;width:4px;background:var(--green)}
+.stat.gold::before{background:var(--gold)}
+.stat.blue::before{background:var(--blue)}
+.stat .num{font-size:26px;font-weight:800;color:var(--green-deep)}
+body.dark .stat .num{color:var(--green)}
+.stat.gold .num{color:var(--gold)}
+.stat.blue .num{color:var(--blue)}
+.stat .lbl{font-size:12px;color:var(--ink-soft);font-weight:700;margin-top:2px}
+
+/* ---------- bar chart ---------- */
+.bars{display:flex;flex-direction:column;gap:9px}
+.bar-row{display:flex;align-items:center;gap:10px;font-size:12.5px}
+.bar-row .bl{width:130px;flex-shrink:0;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-row .track{flex:1;background:var(--green-soft);border-radius:6px;height:20px;position:relative;overflow:hidden}
+.bar-row .fill{position:absolute;inset-inline-start:0;top:0;bottom:0;background:var(--green);border-radius:6px;transition:width .5s ease}
+.bar-row.gold .fill{background:var(--gold)}
+.bar-row .bv{width:34px;text-align:center;font-weight:800;color:var(--ink-soft);flex-shrink:0}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:820px){.two-col{grid-template-columns:1fr}}
+
+/* ---------- filter bar ---------- */
+.filter-bar{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+.filter-bar input,.filter-bar select{border:1px solid var(--line);background:var(--card);border-radius:9px;padding:8px 11px;font-size:13px;color:var(--ink);outline:none}
+.filter-bar input:focus,.filter-bar select:focus{border-color:var(--green)}
+.filter-bar input[type=search]{min-width:200px;flex:1}
+.count-chip{background:var(--green-soft);color:var(--green-deep);border-radius:20px;padding:4px 13px;font-size:12px;font-weight:800;white-space:nowrap}
+body.dark .count-chip{color:var(--green)}
+
+/* ---------- table ---------- */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:900px}
+.tbl th{background:var(--green-soft);color:var(--green-deep);font-size:12px;text-align:inherit;padding:10px 12px;position:sticky;top:0;white-space:nowrap}
+body.dark .tbl th{color:var(--green)}
+.tbl td{padding:9px 12px;border-top:1px solid var(--line);vertical-align:top}
+.tbl tr:hover td{background:#f2f6f1}
+.tbl .muted{color:var(--ink-soft)}
+.tbl .nowrap{white-space:nowrap}
+.tag{display:inline-block;background:var(--green-soft);color:var(--green-deep);border-radius:14px;padding:1px 10px;font-size:11.5px;font-weight:700}
+body.dark .tag{color:var(--green)}
+.tag.gold{background:#f6efdb;color:#9a7420}
+body.dark .tag.gold{background:#33301f;color:var(--gold)}
+.row-actions{display:flex;gap:5px}
+.icon-btn{background:transparent;border:1px solid var(--line);border-radius:7px;width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;color:var(--ink-soft);transition:.15s}
+.icon-btn:hover{border-color:var(--green);color:var(--green)}
+.icon-btn.del:hover{border-color:var(--danger);color:var(--danger)}
+.icon-btn svg{width:14px;height:14px}
+.phone-ltr{direction:ltr;unicode-bidi:embed;display:inline-block}
+
+/* ---------- modal ---------- */
+.overlay{position:fixed;inset:0;background:rgba(20,30,25,.5);display:flex;align-items:center;justify-content:center;z-index:50;padding:18px}
+.modal{background:#fff;border-radius:16px;max-width:640px;width:100%;max-height:92vh;overflow-y:auto;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal h3{font-size:16.5px;margin-bottom:16px}
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:560px){.mgrid{grid-template-columns:1fr}}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:12px;font-weight:700;color:var(--ink-soft);margin-bottom:5px}
+.field input,.field select,.field textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:9px 11px;font-size:13.5px;color:var(--ink);background:#fff;outline:none}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--green)}
+.field textarea{resize:vertical;min-height:64px}
+.modal-actions{display:flex;gap:9px;justify-content:flex-end;margin-top:16px}
+
+/* ---------- toast ---------- */
+.toast{position:fixed;bottom:22px;inset-inline-start:50%;transform:translateX(-50%);background:#20302a;color:#fff;padding:11px 20px;border-radius:11px;font-size:13.5px;font-weight:700;box-shadow:0 10px 30px rgba(0,0,0,.3);z-index:99;opacity:0;transition:.25s;pointer-events:none}
+body[dir="rtl"] .toast{transform:translateX(50%)}
+.toast.show{opacity:1}
+
+/* ---------- login ---------- */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.login-card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:34px 32px;width:100%;max-width:380px;animation:cardUp .55s cubic-bezier(.2,.8,.2,1) both}
+@keyframes cardUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.login-brand{text-align:center;margin-bottom:22px}
+.login-brand h1{font-size:17px;margin-top:10px}
+.login-sub{font-size:12.5px;color:var(--ink-soft);margin-top:4px;font-weight:600}
+.login-btn{width:100%;justify-content:center;padding:11px;margin-top:6px}
+.login-err{color:var(--danger);font-size:12.5px;font-weight:700;min-height:18px;margin-bottom:4px}
+.login-theme svg{width:19px;height:19px}
+.login-controls{display:flex;align-items:center;gap:8px;margin-top:18px;direction:ltr}
+.login-controls .login-lang{margin:0;flex:1;justify-content:center;display:flex;background:var(--sand);border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.login-controls .login-lang button{flex:1;padding:6px 12px;border:0;background:transparent;font-size:12px;font-weight:700;color:var(--ink-soft)}
+.login-controls .login-lang button.on{background:var(--green);color:#fff}
+.login-logo{overflow:visible;animation:floatLogo 3.2s ease-in-out 1.3s infinite}
+.login-logo .ll-arc{stroke-dasharray:60;stroke-dashoffset:60;animation:drawArc .8s ease-out .15s forwards}
+@keyframes drawArc{to{stroke-dashoffset:0}}
+.login-logo .ll-dot{transform-box:fill-box;transform-origin:center;opacity:0;animation:popDot .5s cubic-bezier(.34,1.56,.64,1) forwards}
+.login-logo .ll-dot1{animation-delay:.5s}
+.login-logo .ll-dot2{animation-delay:.68s}
+.login-logo .ll-dot3{animation-delay:.86s}
+@keyframes popDot{0%{opacity:0;transform:scale(0)}60%{opacity:1;transform:scale(1.25)}100%{opacity:1;transform:scale(1)}}
+@keyframes floatLogo{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@media(prefers-reduced-motion:reduce){.login-logo,.login-logo *,.login-card{animation:none!important;opacity:1!important;stroke-dashoffset:0!important;transform:none!important}}
+
+/* ---------- setup banner ---------- */
+.setup-note{font-size:12px;color:var(--ink-soft);margin-top:10px;line-height:1.6}
+
+/* ---------- mobile ---------- */
+@media(max-width:760px){
+  .app{flex-direction:column}
+  .sidebar{width:100%;height:auto;position:static;flex-direction:column}
+  .nav{display:flex;flex-wrap:wrap;gap:4px;padding:8px}
+  .nav .group-label{display:none}
+  .nav button{width:auto;margin:0}
+  .content{padding:14px}
+  .topbar{padding:12px 14px}
+}
+</style>
+</head>
+<body dir="rtl">
+<div id="root"></div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* ================= CONFIG ================= */
+const CFG_KEY='sfc_visitors_cfg';
+let CFG=null; try{ CFG=JSON.parse(localStorage.getItem(CFG_KEY)||'null'); }catch(e){}
+let sb=null;
+if(CFG&&CFG.url&&CFG.key){ sb=window.supabase.createClient(CFG.url,CFG.key); }
+
+/* ================= I18N ================= */
+let LANG=localStorage.getItem('sfc_visitors_lang')||'ar';
+const T={
+ brand:{ar:'زوار القارة',en:'Al-Qara Visitors'},
+ brandSub:{ar:'SAUDI FRIENDSHIP',en:'SAUDI FRIENDSHIP'},
+ loginTitle:{ar:'سجل زوار القارة',en:'Al-Qara Visitors Log'},
+ loginSub:{ar:'جمعية أصدقاء السعودية',en:'Saudi Friends Association'},
+ email:{ar:'البريد الإلكتروني',en:'Email'},
+ password:{ar:'كلمة المرور',en:'Password'},
+ signIn:{ar:'تسجيل الدخول',en:'Sign in'},
+ signOut:{ar:'تسجيل الخروج',en:'Sign out'},
+ loginErr:{ar:'بيانات الدخول غير صحيحة',en:'Invalid email or password'},
+ setupTitle:{ar:'إعداد الاتصال',en:'Connection setup'},
+ setupSub:{ar:'أدخل بيانات مشروع Supabase مرة واحدة',en:'Enter your Supabase project details once'},
+ setupUrl:{ar:'رابط المشروع (Project URL)',en:'Project URL'},
+ setupKey:{ar:'المفتاح العام (Publishable key)',en:'Publishable key'},
+ setupSave:{ar:'حفظ ومتابعة',en:'Save & continue'},
+ setupNote:{ar:'تجدها في Supabase تحت Settings ← API. تُحفظ في هذا المتصفح فقط.',en:'Found in Supabase under Settings → API. Stored in this browser only.'},
+ nav_main:{ar:'الرئيسية',en:'Main'},
+ nav_admin:{ar:'الإدارة',en:'Admin'},
+ dashboard:{ar:'لوحة المعلومات',en:'Dashboard'},
+ visitors:{ar:'الزوار',en:'Visitors'},
+ users:{ar:'المستخدمون',en:'Users'},
+ audit:{ar:'سجل النشاط',en:'Activity log'},
+ role_admin:{ar:'منسق',en:'Admin'},
+ role_staff:{ar:'عضو',en:'Staff'},
+ role_viewer:{ar:'مشاهد',en:'Viewer'},
+ totalVisitors:{ar:'إجمالي الزوار',en:'Total visitors'},
+ countries:{ar:'الدول',en:'Countries'},
+ withPhone:{ar:'لديهم جوال',en:'With phone'},
+ withEmail:{ar:'لديهم بريد',en:'With email'},
+ sfcFans:{ar:'محبو الجمعية',en:'SFC fans'},
+ topCountries:{ar:'أعلى الدول',en:'Top countries'},
+ topLocations:{ar:'أماكن العمل / الإقامة',en:'Work locations'},
+ recent:{ar:'أحدث الإضافات',en:'Recently added'},
+ name:{ar:'الاسم',en:'Name'},
+ job:{ar:'المهنة',en:'Job'},
+ company:{ar:'الجهة / الشركة',en:'Company'},
+ country:{ar:'الدولة / الجنسية',en:'Country'},
+ location:{ar:'مكان العمل',en:'Location'},
+ phone:{ar:'الجوال',en:'Phone'},
+ emailCol:{ar:'البريد',en:'Email'},
+ followup:{ar:'إجراء المتابعة',en:'Follow-up'},
+ notes:{ar:'ملاحظات',en:'Notes'},
+ visitDate:{ar:'تاريخ الزيارة',en:'Visit date'},
+ actions:{ar:'إجراءات',en:'Actions'},
+ addVisitor:{ar:'إضافة زائر',en:'Add visitor'},
+ editVisitor:{ar:'تعديل زائر',en:'Edit visitor'},
+ exportCsv:{ar:'تصدير CSV',en:'Export CSV'},
+ search:{ar:'بحث بالاسم، الجهة، الجوال…',en:'Search name, company, phone…'},
+ allCountries:{ar:'كل الدول',en:'All countries'},
+ allLocations:{ar:'كل الأماكن',en:'All locations'},
+ anyContact:{ar:'كل جهات الاتصال',en:'Any contact info'},
+ hasPhone:{ar:'لديه جوال',en:'Has phone'},
+ hasEmail:{ar:'لديه بريد',en:'Has email'},
+ noContact:{ar:'بدون تواصل',en:'No contact info'},
+ clear:{ar:'مسح',en:'Clear'},
+ results:{ar:'نتيجة',en:'results'},
+ save:{ar:'حفظ',en:'Save'},
+ cancel:{ar:'إلغاء',en:'Cancel'},
+ confirmDel:{ar:'حذف هذا الزائر نهائيًا؟',en:'Delete this visitor permanently?'},
+ saved:{ar:'تم الحفظ ✓',en:'Saved ✓'},
+ deleted:{ar:'تم الحذف',en:'Deleted'},
+ exported:{ar:'تم تصدير الملف ✓',en:'File exported ✓'},
+ nameReq:{ar:'الاسم مطلوب',en:'Name is required'},
+ loadErr:{ar:'تعذر تحميل البيانات',en:'Could not load data'},
+ fullName:{ar:'الاسم الكامل',en:'Full name'},
+ role:{ar:'الدور',en:'Role'},
+ when:{ar:'الوقت',en:'When'},
+ who:{ar:'المستخدم',en:'User'},
+ action:{ar:'الإجراء',en:'Action'},
+ detail:{ar:'التفاصيل',en:'Detail'},
+ act_add:{ar:'إضافة زائر',en:'Added visitor'},
+ act_edit:{ar:'تعديل زائر',en:'Edited visitor'},
+ act_del:{ar:'حذف زائر',en:'Deleted visitor'},
+ act_export:{ar:'تصدير CSV',en:'Exported CSV'},
+ act_role:{ar:'تغيير دور',en:'Changed role'},
+ noResults:{ar:'لا توجد نتائج مطابقة',en:'No matching results'},
+};
+const t=k=>(T[k]&&T[k][LANG])||k;
+function setLang(l){LANG=l;localStorage.setItem('sfc_visitors_lang',l);document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr';document.body.dir=l==='ar'?'rtl':'ltr';rerender();}
+function toggleTheme(){document.body.classList.toggle('dark');localStorage.setItem('sfc_visitors_theme',document.body.classList.contains('dark')?'dark':'light');}
+if(localStorage.getItem('sfc_visitors_theme')==='dark')document.body.classList.add('dark');
+if(LANG==='en'){document.documentElement.lang='en';document.documentElement.dir='ltr';document.body.dir='ltr';}
+
+/* ================= STATE ================= */
+let SESSION=null, ME=null, PAGE='dashboard';
+let VISITORS=[], PROFILES=[], AUDIT=[];
+let FILTER={q:'',country:'',location:'',contact:'',followup:''};
+
+/* ================= ICONS ================= */
+const ICONS={
+ dashboard:'<path d="M3 13h8V3H3zM13 21h8V3h-8zM3 21h8v-6H3z"/>',
+ visitors:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+ users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+ audit:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 15l2 2 4-4"/>',
+ globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/>',
+ pin:'<path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>',
+ clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+ plus:'<path d="M12 5v14M5 12h14"/>',
+ download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>',
+ edit:'<path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/>',
+ trash:'<path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>',
+};
+const icon=n=>`<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${ICONS[n]||''}</svg>`;
+
+/* ================= HELPERS ================= */
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),2200);}
+async function logAudit(action,detail){try{await sb.from('audit_log').insert({actor:ME.id,actor_name:ME.name,action,detail});}catch(e){}}
+
+/* ================= DATA ================= */
+async function loadAll(){
+  const {data,error}=await sb.from('visitors').select('*').order('country',{ascending:true}).order('name',{ascending:true});
+  if(error){toast(t('loadErr'));console.error(error);return;}
+  VISITORS=data||[];
+}
+async function loadProfiles(){const{data}=await sb.from('profiles').select('*').order('full_name');PROFILES=data||[];}
+async function loadAudit(){const{data}=await sb.from('audit_log').select('*').order('at',{ascending:false}).limit(200);AUDIT=data||[];}
+
+/* ================= AUTH / BOOT ================= */
+async function boot(){
+  if(!sb){renderSetup();return;}
+  const {data:{session}}=await sb.auth.getSession();
+  if(session)await onLogin(session);else renderLogin();
+  sb.auth.onAuthStateChange((_e,s)=>{if(!s){SESSION=null;renderLogin();}});
+}
+async function onLogin(session){
+  SESSION=session;
+  const {data:prof}=await sb.from('profiles').select('*').eq('id',session.user.id).single();
+  ME={id:session.user.id,name:(prof?.full_name)||session.user.email,role:(prof?.role)||'staff'};
+  await loadAll();
+  renderApp();
+}
+async function doLogin(){
+  const email=document.getElementById('loginEmail').value.trim();
+  const password=document.getElementById('loginPass').value;
+  const errEl=document.getElementById('loginErr');errEl.textContent='';
+  const {data,error}=await sb.auth.signInWithPassword({email,password});
+  if(error){errEl.textContent=t('loginErr');return;}
+  await onLogin(data.session);
+}
+async function doLogout(){await sb.auth.signOut();SESSION=null;renderLogin();}
+function rerender(){ if(!CFG||!sb){renderSetup();} else if(!SESSION){renderLogin();} else renderApp(); }
+
+/* ================= SETUP SCREEN ================= */
+function renderSetup(){
+  document.getElementById('root').innerHTML=`
+  <div class="login-wrap"><div class="login-card">
+    <div class="login-brand">${logoSvg()}<h1>${t('setupTitle')}</h1><div class="login-sub">${t('setupSub')}</div></div>
+    <div class="field"><label>${t('setupUrl')}</label><input id="cfgUrl" dir="ltr" placeholder="https://xxxx.supabase.co" value="${esc(CFG?.url||'')}"></div>
+    <div class="field"><label>${t('setupKey')}</label><input id="cfgKey" dir="ltr" placeholder="sb_publishable_..." value="${esc(CFG?.key||'')}"></div>
+    <button class="btn btn-primary login-btn" onclick="saveCfg()">${t('setupSave')}</button>
+    <div class="setup-note">${t('setupNote')}</div>
+    ${loginControls()}
+  </div></div>`;
+}
+function saveCfg(){
+  const url=document.getElementById('cfgUrl').value.trim().replace(/\/$/,'');
+  const key=document.getElementById('cfgKey').value.trim();
+  if(!url||!key)return;
+  CFG={url,key};localStorage.setItem(CFG_KEY,JSON.stringify(CFG));
+  sb=window.supabase.createClient(url,key);
+  boot();
+}
+
+/* ================= LOGIN ================= */
+function logoSvg(){return `<svg class="login-logo" width="60" height="60" viewBox="0 0 40 40">
+  <path class="ll-arc" d="M8 34c0-7 5-12 12-12s12 5 12 12" stroke="var(--green)" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+  <circle class="ll-dot ll-dot1" cx="9" cy="15" r="3.4" fill="#4a9c5c"/>
+  <circle class="ll-dot ll-dot2" cx="20" cy="11" r="5" fill="#7fc08e"/>
+  <circle class="ll-dot ll-dot3" cx="31" cy="15" r="3.4" fill="var(--gold)"/></svg>`;}
+function loginControls(){return `<div class="login-controls">
+  <button class="theme-btn login-theme" onclick="toggleTheme();rerender()" title="">
+    <svg class="ico-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+    <svg class="ico-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+  </button>
+  <div class="login-lang">
+    <button onclick="setLang('ar')" class="${LANG==='ar'?'on':''}">عربي</button>
+    <button onclick="setLang('en')" class="${LANG==='en'?'on':''}">English</button>
+  </div></div>`;}
+function renderLogin(){
+  document.getElementById('root').innerHTML=`
+  <div class="login-wrap"><div class="login-card">
+    <div class="login-brand">${logoSvg()}<h1>${t('loginTitle')}</h1><div class="login-sub">${t('loginSub')}</div></div>
+    <div class="field"><label>${t('email')}</label><input id="loginEmail" type="email" autocomplete="username"></div>
+    <div class="field"><label>${t('password')}</label><input id="loginPass" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div id="loginErr" class="login-err"></div>
+    <button class="btn btn-primary login-btn" onclick="doLogin()">${t('signIn')}</button>
+    ${loginControls()}
+  </div></div>`;
+}
+
+/* ================= APP SHELL ================= */
+function navItems(){
+  const g=[{g:'nav_main',items:[['dashboard','dashboard'],['visitors','visitors']]}];
+  if(ME.role==='admin')g.push({g:'nav_admin',items:[['users','users'],['audit','audit']]});
+  return g;
+}
+function renderApp(){
+  document.getElementById('root').innerHTML=`
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand"><div class="logo">
+        <svg class="mark" viewBox="0 0 40 40"><circle cx="20" cy="11" r="5" fill="#7fc08e"/>
+          <path d="M8 34c0-7 5-12 12-12s12 5 12 12" stroke="#7fc08e" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+          <circle cx="9" cy="15" r="3.4" fill="#4a9c5c"/><circle cx="31" cy="15" r="3.4" fill="#c79a3d"/></svg>
+        <div><h1>${t('brand')}</h1><div class="sub">${t('brandSub')}</div></div>
+      </div></div>
+      <nav class="nav" id="nav"></nav>
+      <div class="sidebar-foot">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <div class="avatar">${esc((ME.name||'?').slice(0,1).toUpperCase())}</div>
+          <div style="line-height:1.2"><div style="color:#eaf3ec;font-weight:700;font-size:12.5px">${esc(ME.name)}</div>
+          <div style="font-size:10.5px">${t('role_'+ME.role)}</div></div>
+        </div>
+        <button class="btn-signout" onclick="doLogout()">${t('signOut')}</button>
+      </div>
+    </aside>
+    <div class="main">
+      <div class="topbar">
+        <div class="page-title" id="pageTitle"></div>
+        <div class="spacer"></div>
+        <button class="theme-btn" onclick="toggleTheme()">
+          <svg class="ico-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+          <svg class="ico-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        </button>
+        <div class="lang-toggle">
+          <button onclick="setLang('ar')" class="${LANG==='ar'?'on':''}">عربي</button>
+          <button onclick="setLang('en')" class="${LANG==='en'?'on':''}">English</button>
+        </div>
+      </div>
+      <div class="content" id="content"></div>
+    </div>
+  </div>`;
+  renderNav();go(PAGE);
+}
+function renderNav(){
+  document.getElementById('nav').innerHTML=navItems().map(gr=>
+    `<div class="group-label">${t(gr.g)}</div>`+
+    gr.items.map(([p,i])=>`<button class="${PAGE===p?'active':''}" onclick="go('${p}')">${icon(i)}<span>${t(p)}</span></button>`).join('')
+  ).join('');
+}
+async function go(p){
+  PAGE=p;renderNav();
+  document.getElementById('pageTitle').textContent=t(p);
+  if(p==='dashboard')renderDashboard();
+  else if(p==='visitors')renderVisitors();
+  else if(p==='users'){await loadProfiles();renderUsers();}
+  else if(p==='audit'){await loadAudit();renderAudit();}
+}
+
+/* ================= DASHBOARD ================= */
+function counts(arr,key){const m={};arr.forEach(v=>{const k=(v[key]||'').trim();if(k)m[k]=(m[k]||0)+1;});return Object.entries(m).sort((a,b)=>b[1]-a[1]);}
+function renderDashboard(){
+  const total=VISITORS.length;
+  const byCountry=counts(VISITORS,'country');
+  const byLoc=counts(VISITORS,'location');
+  const withPhone=VISITORS.filter(v=>v.phone).length;
+  const withEmail=VISITORS.filter(v=>v.email).length;
+  const fans=VISITORS.filter(v=>(v.followup||'').toLowerCase().includes('fan')).length;
+  const max=byCountry[0]?byCountry[0][1]:1;
+  const maxL=byLoc[0]?byLoc[0][1]:1;
+  const recent=[...VISITORS].sort((a,b)=>(b.created_at||'').localeCompare(a.created_at||'')).slice(0,6);
+  document.getElementById('content').innerHTML=`
+  <div class="stats">
+    <div class="stat"><div class="num">${total}</div><div class="lbl">${t('totalVisitors')}</div></div>
+    <div class="stat gold"><div class="num">${byCountry.length}</div><div class="lbl">${t('countries')}</div></div>
+    <div class="stat blue"><div class="num">${withPhone}</div><div class="lbl">${t('withPhone')}</div></div>
+    <div class="stat blue"><div class="num">${withEmail}</div><div class="lbl">${t('withEmail')}</div></div>
+    <div class="stat gold"><div class="num">${fans}</div><div class="lbl">${t('sfcFans')}</div></div>
+  </div>
+  <div class="two-col">
+    <div class="card"><h2>${icon('globe')}${t('topCountries')}</h2>
+      <div class="bars">${byCountry.slice(0,12).map(([k,v])=>`
+        <div class="bar-row"><div class="bl" title="${esc(k)}">${esc(k)}</div>
+          <div class="track"><div class="fill" style="width:${Math.round(v/max*100)}%"></div></div>
+          <div class="bv">${v}</div></div>`).join('')}
+      </div></div>
+    <div class="card"><h2>${icon('pin')}${t('topLocations')}</h2>
+      <div class="bars">${byLoc.slice(0,12).map(([k,v])=>`
+        <div class="bar-row gold"><div class="bl" title="${esc(k)}">${esc(k)}</div>
+          <div class="track"><div class="fill" style="width:${Math.round(v/maxL*100)}%"></div></div>
+          <div class="bv">${v}</div></div>`).join('')}
+      </div></div>
+  </div>
+  <div class="card"><h2>${icon('clock')}${t('recent')}</h2>
+    <div class="tbl-wrap"><table class="tbl"><thead><tr>
+      <th>${t('name')}</th><th>${t('country')}</th><th>${t('location')}</th><th>${t('phone')}</th><th>${t('followup')}</th>
+    </tr></thead><tbody>${recent.map(v=>`<tr>
+      <td><b>${esc(v.name)}</b></td><td><span class="tag">${esc(v.country)}</span></td>
+      <td class="muted">${esc(v.location)}</td><td class="nowrap"><span class="phone-ltr">${esc(v.phone)}</span></td>
+      <td>${v.followup?`<span class="tag gold">${esc(v.followup)}</span>`:''}</td></tr>`).join('')}
+    </tbody></table></div></div>`;
+}
+
+/* ================= VISITORS ================= */
+function filtered(){
+  const q=FILTER.q.toLowerCase();
+  return VISITORS.filter(v=>{
+    if(FILTER.country&&v.country!==FILTER.country)return false;
+    if(FILTER.location&&v.location!==FILTER.location)return false;
+    if(FILTER.contact==='phone'&&!v.phone)return false;
+    if(FILTER.contact==='email'&&!v.email)return false;
+    if(FILTER.contact==='none'&&(v.phone||v.email))return false;
+    if(FILTER.followup&&!(v.followup||''))return false;
+    if(q){
+      const hay=[v.name,v.job,v.company,v.country,v.location,v.phone,v.email,v.followup,v.notes].join(' ').toLowerCase();
+      if(!hay.includes(q))return false;
+    }
+    return true;
+  });
+}
+function uniqueVals(key){return [...new Set(VISITORS.map(v=>(v[key]||'').trim()).filter(Boolean))].sort();}
+function renderVisitors(){
+  const canEdit=ME.role==='admin'||ME.role==='staff';
+  const rows=filtered();
+  document.getElementById('content').innerHTML=`
+  <div class="filter-bar">
+    <input type="search" id="fQ" placeholder="${t('search')}" value="${esc(FILTER.q)}" oninput="FILTER.q=this.value;refreshTable()">
+    <select id="fC" onchange="FILTER.country=this.value;refreshTable()">
+      <option value="">${t('allCountries')}</option>
+      ${uniqueVals('country').map(c=>`<option ${FILTER.country===c?'selected':''}>${esc(c)}</option>`).join('')}
+    </select>
+    <select id="fL" onchange="FILTER.location=this.value;refreshTable()">
+      <option value="">${t('allLocations')}</option>
+      ${uniqueVals('location').map(c=>`<option ${FILTER.location===c?'selected':''}>${esc(c)}</option>`).join('')}
+    </select>
+    <select id="fCon" onchange="FILTER.contact=this.value;refreshTable()">
+      <option value="">${t('anyContact')}</option>
+      <option value="phone" ${FILTER.contact==='phone'?'selected':''}>${t('hasPhone')}</option>
+      <option value="email" ${FILTER.contact==='email'?'selected':''}>${t('hasEmail')}</option>
+      <option value="none" ${FILTER.contact==='none'?'selected':''}>${t('noContact')}</option>
+    </select>
+    <button class="btn btn-ghost btn-sm" onclick="FILTER={q:'',country:'',location:'',contact:'',followup:''};renderVisitors()">${t('clear')}</button>
+    <span class="count-chip" id="countChip">${rows.length} ${t('results')}</span>
+    <div style="flex:1"></div>
+    <button class="btn btn-ghost" onclick="exportCsv()">${icon('download')}${t('exportCsv')}</button>
+    ${canEdit?`<button class="btn btn-primary" onclick="openModal()">${icon('plus')}${t('addVisitor')}</button>`:''}
+  </div>
+  <div class="tbl-wrap"><table class="tbl"><thead><tr>
+    <th>${t('name')}</th><th>${t('job')}</th><th>${t('company')}</th><th>${t('country')}</th>
+    <th>${t('location')}</th><th>${t('phone')}</th><th>${t('emailCol')}</th><th>${t('followup')}</th>
+    ${canEdit?`<th>${t('actions')}</th>`:''}
+  </tr></thead><tbody id="vBody"></tbody></table></div>`;
+  paintRows();
+}
+function refreshTable(){
+  document.getElementById('countChip').textContent=`${filtered().length} ${t('results')}`;
+  paintRows();
+}
+function paintRows(){
+  const canEdit=ME.role==='admin'||ME.role==='staff';
+  const rows=filtered();
+  document.getElementById('vBody').innerHTML=rows.length?rows.map(v=>`<tr>
+    <td><b>${esc(v.name)}</b></td>
+    <td class="muted">${esc(v.job)}</td>
+    <td class="muted">${esc(v.company)}</td>
+    <td><span class="tag">${esc(v.country)}</span></td>
+    <td class="muted">${esc(v.location)}</td>
+    <td class="nowrap"><span class="phone-ltr">${esc(v.phone)}</span></td>
+    <td class="muted" style="direction:ltr">${esc(v.email)}</td>
+    <td>${v.followup?`<span class="tag gold">${esc(v.followup)}</span>`:''}</td>
+    ${canEdit?`<td><div class="row-actions">
+      <button class="icon-btn" onclick="openModal('${v.id}')" title="${t('editVisitor')}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS.edit}</svg></button>
+      ${ME.role==='admin'?`<button class="icon-btn del" onclick="delVisitor('${v.id}')" title="✕"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS.trash}</svg></button>`:''}
+    </div></td>`:''}
+  </tr>`).join(''):`<tr><td colspan="9" style="text-align:center;padding:26px" class="muted">${t('noResults')}</td></tr>`;
+}
+
+/* ---- add / edit modal ---- */
+function openModal(id){
+  const v=id?VISITORS.find(x=>x.id===id):{};
+  const fields=[['name','name'],['job','job'],['company','company'],['country','country'],['location','location'],['phone','phone'],['email','emailCol'],['followup','followup']];
+  document.body.insertAdjacentHTML('beforeend',`
+  <div class="overlay" id="modalOv" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <h3>${id?t('editVisitor'):t('addVisitor')}</h3>
+      <div class="mgrid">
+        ${fields.map(([f,lbl])=>`<div class="field"><label>${t(lbl)}${f==='name'?' *':''}</label>
+          <input id="m_${f}" value="${esc(v[f]||'')}" ${f==='country'?'list="countryList"':''} ${(f==='phone'||f==='email')?'dir="ltr"':''}></div>`).join('')}
+        <div class="field"><label>${t('visitDate')}</label><input id="m_visit_date" type="date" value="${esc(v.visit_date||'')}"></div>
+      </div>
+      <div class="field"><label>${t('notes')}</label><textarea id="m_notes">${esc(v.notes||'')}</textarea></div>
+      <datalist id="countryList">${uniqueVals('country').map(c=>`<option value="${esc(c)}">`).join('')}</datalist>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal()">${t('cancel')}</button>
+        <button class="btn btn-primary" onclick="saveVisitor(${id?`'${id}'`:'null'})">${t('save')}</button>
+      </div>
+    </div>
+  </div>`);
+}
+function closeModal(){document.getElementById('modalOv')?.remove();}
+async function saveVisitor(id){
+  const g=f=>document.getElementById('m_'+f).value.trim();
+  const rec={name:g('name'),job:g('job'),company:g('company'),country:g('country')||'Unknown',
+    location:g('location'),phone:g('phone'),email:g('email'),followup:g('followup'),
+    notes:g('notes'),visit_date:g('visit_date')||null,updated_at:new Date().toISOString()};
+  if(!rec.name){toast(t('nameReq'));return;}
+  let error;
+  if(id){({error}=await sb.from('visitors').update(rec).eq('id',id));}
+  else{rec.created_by=ME.id;({error}=await sb.from('visitors').insert(rec));}
+  if(error){toast(error.message);return;}
+  await logAudit(id?'act_edit':'act_add',rec.name+' ('+rec.country+')');
+  closeModal();await loadAll();
+  if(PAGE==='visitors')renderVisitors();else renderDashboard();
+  toast(t('saved'));
+}
+async function delVisitor(id){
+  if(!confirm(t('confirmDel')))return;
+  const v=VISITORS.find(x=>x.id===id);
+  const {error}=await sb.from('visitors').delete().eq('id',id);
+  if(error){toast(error.message);return;}
+  await logAudit('act_del',(v?.name||'')+' ('+(v?.country||'')+')');
+  await loadAll();renderVisitors();toast(t('deleted'));
+}
+
+/* ---- CSV export ---- */
+function exportCsv(){
+  const rows=filtered();
+  const cols=[['name',t('name')],['job',t('job')],['company',t('company')],['country',t('country')],
+    ['location',t('location')],['phone',t('phone')],['email',t('emailCol')],['followup',t('followup')],
+    ['notes',t('notes')],['visit_date',t('visitDate')]];
+  const q=s=>{s=String(s??'');return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;};
+  const csv='\ufeff'+cols.map(c=>q(c[1])).join(',')+'\n'
+    +rows.map(v=>cols.map(c=>q(v[c[0]])).join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='AlQara_Visitors_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();URL.revokeObjectURL(a.href);
+  logAudit('act_export',rows.length+' rows');
+  toast(t('exported'));
+}
+
+/* ================= USERS (admin) ================= */
+function renderUsers(){
+  document.getElementById('content').innerHTML=`
+  <div class="card"><h2>${icon('users')}${t('users')}</h2>
+  <div class="tbl-wrap"><table class="tbl"><thead><tr>
+    <th>${t('fullName')}</th><th>${t('role')}</th></tr></thead><tbody>
+    ${PROFILES.map(p=>`<tr><td><b>${esc(p.full_name||p.id)}</b></td>
+      <td><select onchange="setRole('${p.id}',this.value)" ${p.id===ME.id?'disabled':''}>
+        ${['admin','staff','viewer'].map(r=>`<option value="${r}" ${p.role===r?'selected':''}>${t('role_'+r)}</option>`).join('')}
+      </select></td></tr>`).join('')}
+  </tbody></table></div></div>`;
+}
+async function setRole(id,role){
+  const {error}=await sb.from('profiles').update({role}).eq('id',id);
+  if(error){toast(error.message);return;}
+  const p=PROFILES.find(x=>x.id===id);
+  await logAudit('act_role',(p?.full_name||id)+' → '+role);
+  toast(t('saved'));
+}
+
+/* ================= AUDIT (admin) ================= */
+function renderAudit(){
+  document.getElementById('content').innerHTML=`
+  <div class="card"><h2>${icon('audit')}${t('audit')}</h2>
+  <div class="tbl-wrap"><table class="tbl"><thead><tr>
+    <th>${t('when')}</th><th>${t('who')}</th><th>${t('action')}</th><th>${t('detail')}</th></tr></thead><tbody>
+    ${AUDIT.map(a=>`<tr>
+      <td class="nowrap muted"><span class="phone-ltr">${esc((a.at||'').replace('T',' ').slice(0,16))}</span></td>
+      <td><b>${esc(a.actor_name||'')}</b></td>
+      <td><span class="tag">${t(a.action)||esc(a.action)}</span></td>
+      <td class="muted">${esc(a.detail||'')}</td></tr>`).join('')}
+  </tbody></table></div></div>`;
+}
+
+boot();
+</script>
+</body>
+</html>
