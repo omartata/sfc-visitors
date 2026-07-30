@@ -288,6 +288,7 @@ const T={
  deleted:{ar:'تم الحذف',en:'Deleted'},
  exported:{ar:'تم تصدير الملف ✓',en:'File exported ✓'},
  nameReq:{ar:'الاسم مطلوب',en:'Name is required'},
+ badDate:{ar:'تاريخ غير صحيح — استخدم صيغة يوم/شهر/سنة مثل 22/07/26',en:'Invalid date — use dd/mm/yy, e.g. 22/07/26'},
  loadErr:{ar:'تعذر تحميل البيانات',en:'Could not load data'},
  fullName:{ar:'الاسم الكامل',en:'Full name'},
  role:{ar:'الدور',en:'Role'},
@@ -330,6 +331,41 @@ const ICONS={
 const icon=n=>`<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${ICONS[n]||''}</svg>`;
 
 /* ================= HELPERS ================= */
+/* SFC date standard: display everywhere as dd/mm/yy; store ISO in DB */
+function fmtDate(iso){
+  if(!iso)return '';
+  const d=new Date(iso); if(isNaN(d))return '';
+  const p=n=>String(n).padStart(2,'0');
+  return p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+String(d.getFullYear()).slice(-2);
+}
+function fmtDateTime(iso){
+  if(!iso)return '';
+  const d=new Date(iso); if(isNaN(d))return '';
+  const p=n=>String(n).padStart(2,'0');
+  return fmtDate(iso)+' '+p(d.getHours())+':'+p(d.getMinutes());
+}
+/* parse typed dd/mm/yy or dd/mm/yyyy back to ISO YYYY-MM-DD for the DB.
+   Returns '' for blank, null for unparseable input. */
+function parseDate(str){
+  const s=String(str||'').trim();
+  if(!s)return '';
+  const m=s.match(/^(\d{1,2})\s*[\/\-.]\s*(\d{1,2})\s*[\/\-.]\s*(\d{2}|\d{4})$/);
+  if(!m)return null;
+  const d=+m[1], mo=+m[2]; let y=+m[3];
+  if(m[3].length===2) y=y+(y<=70?2000:1900);
+  if(d<1||d>31||mo<1||mo>12)return null;
+  const dt=new Date(Date.UTC(y,mo-1,d));
+  if(dt.getUTCDate()!==d||dt.getUTCMonth()!==mo-1)return null; // rejects 31/02
+  const p=n=>String(n).padStart(2,'0');
+  return y+'-'+p(mo)+'-'+p(d);
+}
+/* auto-insert slashes while typing */
+function maskDate(el){
+  let v=el.value.replace(/[^\d]/g,'').slice(0,8);
+  if(v.length>4) v=v.slice(0,2)+'/'+v.slice(2,4)+'/'+v.slice(4);
+  else if(v.length>2) v=v.slice(0,2)+'/'+v.slice(2);
+  el.value=v;
+}
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),2200);}
 async function logAudit(action,detail){try{await sb.from('audit_log').insert({actor:ME.id,actor_name:ME.name,action,detail});}catch(e){}}
@@ -366,27 +402,6 @@ async function doLogin(){
 }
 async function doLogout(){await sb.auth.signOut();SESSION=null;renderLogin();}
 function rerender(){ if(!SESSION){renderLogin();} else renderApp(); }
-
-/* ================= SETUP SCREEN ================= */
-function renderSetup(){
-  document.getElementById('root').innerHTML=`
-  <div class="login-wrap"><div class="login-card">
-    <div class="login-brand">${logoSvg()}<h1>${t('setupTitle')}</h1><div class="login-sub">${t('setupSub')}</div></div>
-    <div class="field"><label>${t('setupUrl')}</label><input id="cfgUrl" dir="ltr" placeholder="https://xxxx.supabase.co" value="${esc(CFG?.url||'')}"></div>
-    <div class="field"><label>${t('setupKey')}</label><input id="cfgKey" dir="ltr" placeholder="sb_publishable_..." value="${esc(CFG?.key||'')}"></div>
-    <button class="btn btn-primary login-btn" onclick="saveCfg()">${t('setupSave')}</button>
-    <div class="setup-note">${t('setupNote')}</div>
-    ${loginControls()}
-  </div></div>`;
-}
-function saveCfg(){
-  const url=document.getElementById('cfgUrl').value.trim().replace(/\/$/,'');
-  const key=document.getElementById('cfgKey').value.trim();
-  if(!url||!key)return;
-  CFG={url,key};localStorage.setItem(CFG_KEY,JSON.stringify(CFG));
-  sb=window.supabase.createClient(url,key);
-  boot();
-}
 
 /* ================= LOGIN ================= */
 function logoSvg(){return `<svg class="login-logo" width="60" height="60" viewBox="0 0 40 40">
@@ -510,10 +525,11 @@ function renderDashboard(){
   </div>
   <div class="card"><h2>${icon('clock')}${t('recent')}</h2>
     <div class="tbl-wrap"><table class="tbl"><thead><tr>
-      <th>${t('name')}</th><th>${t('country')}</th><th>${t('location')}</th><th>${t('phone')}</th><th>${t('followup')}</th>
+      <th>${t('name')}</th><th>${t('country')}</th><th>${t('location')}</th><th>${t('phone')}</th><th class="nowrap">${t('visitDate')}</th><th>${t('followup')}</th>
     </tr></thead><tbody>${recent.map(v=>`<tr>
       <td><b>${esc(v.name)}</b></td><td><span class="tag">${esc(v.country)}</span></td>
       <td class="muted">${esc(v.location)}</td><td class="nowrap"><span class="phone-ltr">${esc(v.phone)}</span></td>
+      <td class="nowrap muted"><span class="phone-ltr">${esc(fmtDate(v.visit_date))}</span></td>
       <td>${v.followup?`<span class="tag gold">${esc(v.followup)}</span>`:''}</td></tr>`).join('')}
     </tbody></table></div></div>`;
 }
@@ -564,7 +580,7 @@ function renderVisitors(){
   </div>
   <div class="tbl-wrap"><table class="tbl"><thead><tr>
     <th>${t('name')}</th><th>${t('job')}</th><th>${t('company')}</th><th>${t('country')}</th>
-    <th>${t('location')}</th><th>${t('phone')}</th><th>${t('emailCol')}</th><th>${t('followup')}</th>
+    <th>${t('location')}</th><th>${t('phone')}</th><th>${t('emailCol')}</th><th class="nowrap">${t('visitDate')}</th><th>${t('followup')}</th>
     ${canEdit?`<th>${t('actions')}</th>`:''}
   </tr></thead><tbody id="vBody"></tbody></table></div>`;
   paintRows();
@@ -584,12 +600,13 @@ function paintRows(){
     <td class="muted">${esc(v.location)}</td>
     <td class="nowrap"><span class="phone-ltr">${esc(v.phone)}</span></td>
     <td class="muted" style="direction:ltr">${esc(v.email)}</td>
+    <td class="nowrap muted"><span class="phone-ltr">${esc(fmtDate(v.visit_date))}</span></td>
     <td>${v.followup?`<span class="tag gold">${esc(v.followup)}</span>`:''}</td>
     ${canEdit?`<td><div class="row-actions">
       <button class="icon-btn" onclick="openModal('${v.id}')" title="${t('editVisitor')}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS.edit}</svg></button>
       ${ME.role==='admin'?`<button class="icon-btn del" onclick="delVisitor('${v.id}')" title="✕"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS.trash}</svg></button>`:''}
     </div></td>`:''}
-  </tr>`).join(''):`<tr><td colspan="9" style="text-align:center;padding:26px" class="muted">${t('noResults')}</td></tr>`;
+  </tr>`).join(''):`<tr><td colspan="10" style="text-align:center;padding:26px" class="muted">${t('noResults')}</td></tr>`;
 }
 
 /* ---- add / edit modal ---- */
@@ -603,7 +620,7 @@ function openModal(id){
       <div class="mgrid">
         ${fields.map(([f,lbl])=>`<div class="field"><label>${t(lbl)}${f==='name'?' *':''}</label>
           <input id="m_${f}" value="${esc(v[f]||'')}" ${f==='country'?'list="countryList"':''} ${(f==='phone'||f==='email')?'dir="ltr"':''}></div>`).join('')}
-        <div class="field"><label>${t('visitDate')}</label><input id="m_visit_date" type="date" value="${esc(v.visit_date||'')}"></div>
+        <div class="field"><label>${t('visitDate')}</label><input id="m_visit_date" type="text" inputmode="numeric" dir="ltr" placeholder="dd/mm/yy" maxlength="10" oninput="maskDate(this)" value="${esc(fmtDate(v.visit_date))}"></div>
       </div>
       <div class="field"><label>${t('notes')}</label><textarea id="m_notes">${esc(v.notes||'')}</textarea></div>
       <datalist id="countryList">${uniqueVals('country').map(c=>`<option value="${esc(c)}">`).join('')}</datalist>
@@ -617,9 +634,11 @@ function openModal(id){
 function closeModal(){document.getElementById('modalOv')?.remove();}
 async function saveVisitor(id){
   const g=f=>document.getElementById('m_'+f).value.trim();
+  const vd=parseDate(g('visit_date'));
+  if(vd===null){toast(t('badDate'));return;}
   const rec={name:g('name'),job:g('job'),company:g('company'),country:g('country')||'Unknown',
     location:g('location'),phone:g('phone'),email:g('email'),followup:g('followup'),
-    notes:g('notes'),visit_date:g('visit_date')||null,updated_at:new Date().toISOString()};
+    notes:g('notes'),visit_date:vd||null,updated_at:new Date().toISOString()};
   if(!rec.name){toast(t('nameReq'));return;}
   let error;
   if(id){({error}=await sb.from('visitors').update(rec).eq('id',id));}
@@ -647,10 +666,10 @@ function exportCsv(){
     ['notes',t('notes')],['visit_date',t('visitDate')]];
   const q=s=>{s=String(s??'');return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;};
   const csv='\ufeff'+cols.map(c=>q(c[1])).join(',')+'\n'
-    +rows.map(v=>cols.map(c=>q(v[c[0]])).join(',')).join('\n');
+    +rows.map(v=>cols.map(c=>q(c[0]==='visit_date'?fmtDate(v.visit_date):v[c[0]])).join(',')).join('\n');
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download='AlQara_Visitors_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.download='AlQara_Visitors_'+fmtDate(new Date().toISOString()).replace(/\//g,'-')+'.csv';
   a.click();URL.revokeObjectURL(a.href);
   logAudit('act_export',rows.length+' rows');
   toast(t('exported'));
@@ -683,7 +702,7 @@ function renderAudit(){
   <div class="tbl-wrap"><table class="tbl"><thead><tr>
     <th>${t('when')}</th><th>${t('who')}</th><th>${t('action')}</th><th>${t('detail')}</th></tr></thead><tbody>
     ${AUDIT.map(a=>`<tr>
-      <td class="nowrap muted"><span class="phone-ltr">${esc((a.at||'').replace('T',' ').slice(0,16))}</span></td>
+      <td class="nowrap muted"><span class="phone-ltr">${esc(fmtDateTime(a.at))}</span></td>
       <td><b>${esc(a.actor_name||'')}</b></td>
       <td><span class="tag">${t(a.action)||esc(a.action)}</span></td>
       <td class="muted">${esc(a.detail||'')}</td></tr>`).join('')}
