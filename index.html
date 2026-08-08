@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
 <title>سجل زوار القارة · جمعية أصدقاء السعودية</title>
 <style>
 /* ============================================================
@@ -145,6 +145,13 @@ body.dark .tbl th{color:var(--green)}
 body.dark .tag{color:var(--green)}
 .tag.gold{background:#f6efdb;color:#9a7420}
 body.dark .tag.gold{background:#33301f;color:var(--gold)}
+.tag.blue{background:#e4eef6;color:#2f6f9f}
+body.dark .tag.blue{background:#1e2c38;color:#7fb4dd}
+.tag.pink{background:#f7e6ee;color:#a64b76}
+body.dark .tag.pink{background:#33212a;color:#d88fb0}
+.date-flt{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--ink-soft);border:1px solid var(--line);background:var(--card);border-radius:9px;padding:4px 10px}
+.date-flt input{border:0;background:transparent;color:var(--ink);font-size:12.5px;padding:3px 0;outline:none}
+body.dark .date-flt input{color:var(--ink)}
 .row-actions{display:flex;gap:5px}
 .icon-btn{background:transparent;border:1px solid var(--line);border-radius:7px;width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;color:var(--ink-soft);transition:.15s}
 .icon-btn:hover{border-color:var(--green);color:var(--green)}
@@ -199,15 +206,59 @@ body[dir="rtl"] .toast{transform:translateX(50%)}
 .setup-note{font-size:12px;color:var(--ink-soft);margin-top:10px;line-height:1.6}
 
 /* ---------- mobile ---------- */
-@media(max-width:760px){
-  .app{flex-direction:column}
-  .sidebar{width:100%;height:auto;position:static;flex-direction:column}
-  .nav{display:flex;flex-wrap:wrap;gap:4px;padding:8px}
-  .nav .group-label{display:none}
-  .nav button{width:auto;margin:0}
-  .content{padding:14px}
-  .topbar{padding:12px 14px}
+/* ---- iPad / tablet (portrait & landscape) ---- */
+@media(max-width:1024px){
+  .sidebar{width:210px}
+  .content{padding:20px}
+  .stats{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
 }
+/* collapse sidebar to a top bar on narrow tablets & phones */
+@media(max-width:860px){
+  .app{flex-direction:column}
+  .sidebar{width:100%;height:auto;position:sticky;top:0;z-index:30;flex-direction:row;align-items:center;overflow-x:auto;gap:6px}
+  .brand{border-bottom:0;border-inline-end:1px solid rgba(255,255,255,.12);padding:12px 16px;flex-shrink:0}
+  .brand .sub{display:none}
+  .brand h1{font-size:13.5px}
+  .nav{display:flex;flex-wrap:nowrap;gap:4px;padding:8px;flex:1;overflow-x:auto}
+  .nav .group-label{display:none}
+  .nav button{width:auto;margin:0;white-space:nowrap;padding:8px 12px}
+  .sidebar-foot{border-top:0;border-inline-start:1px solid rgba(255,255,255,.12);padding:8px 12px;flex-shrink:0;display:flex;align-items:center;gap:8px}
+  .sidebar-foot>div{margin:0!important}
+  .btn-signout{width:auto;padding:7px 12px;white-space:nowrap}
+  .two-col{grid-template-columns:1fr}
+}
+/* ---- phone ---- */
+@media(max-width:560px){
+  .content{padding:12px}
+  .topbar{padding:10px 12px}
+  .topbar .page-title{font-size:16px}
+  .filter-bar{gap:7px}
+  .filter-bar input[type=search]{min-width:100%;order:-1}
+  .filter-bar select,.date-flt{flex:1 1 46%;min-width:0}
+  .filter-bar .btn{flex:1 1 46%;justify-content:center}
+  .count-chip{flex:1 1 100%;text-align:center}
+  .stats{grid-template-columns:1fr 1fr}
+  .stat .num{font-size:22px}
+  .mgrid{grid-template-columns:1fr}
+  .modal{padding:20px 18px;border-radius:14px}
+  .sidebar-foot .avatar{width:30px;height:30px;font-size:13px}
+  .brand{padding:10px 12px}
+  /* bigger touch targets */
+  .icon-btn{width:34px;height:34px}
+  .nav button{font-size:13px}
+  .lang-toggle button{padding:8px 12px}
+  .theme-btn{width:40px;height:38px}
+}
+/* keep table usable on touch: momentum scroll + sticky name column */
+.tbl-wrap{-webkit-overflow-scrolling:touch}
+@media(max-width:860px){
+  .tbl{font-size:12.5px}
+  .tbl th,.tbl td{padding:8px 10px}
+  .tbl th:first-child,.tbl td:first-child{position:sticky;inset-inline-start:0;background:var(--card);z-index:1}
+  .tbl th:first-child{background:var(--green-soft)}
+  .tbl tr:hover td:first-child{background:#f2f6f1}
+}
+body.dark .tbl th:first-child{background:var(--green-soft)}
 </style>
 </head>
 <body dir="rtl">
@@ -260,6 +311,13 @@ const T={
  recent:{ar:'أحدث الإضافات',en:'Recently added'},
  name:{ar:'الاسم',en:'Name'},
  job:{ar:'المهنة',en:'Job'},
+ gender:{ar:'الجنس',en:'Gender'},
+ allGenders:{ar:'الكل',en:'All'},
+ male:{ar:'ذكر',en:'Male'},
+ female:{ar:'أنثى',en:'Female'},
+ unspecified:{ar:'غير محدد',en:'—'},
+ dateFrom:{ar:'من تاريخ',en:'From'},
+ dateTo:{ar:'إلى تاريخ',en:'To'},
  company:{ar:'الجهة / الشركة',en:'Company'},
  country:{ar:'الدولة / الجنسية',en:'Country'},
  location:{ar:'مكان العمل',en:'Location'},
@@ -312,7 +370,7 @@ if(LANG==='en'){document.documentElement.lang='en';document.documentElement.dir=
 /* ================= STATE ================= */
 let SESSION=null, ME=null, PAGE='dashboard';
 let VISITORS=[], PROFILES=[], AUDIT=[];
-let FILTER={q:'',country:'',location:'',contact:'',followup:''};
+let FILTER={q:'',country:'',location:'',contact:'',followup:'',gender:'',dfrom:'',dto:''};
 
 /* ================= ICONS ================= */
 const ICONS={
@@ -498,6 +556,8 @@ function renderDashboard(){
   const withPhone=VISITORS.filter(v=>v.phone).length;
   const withEmail=VISITORS.filter(v=>v.email).length;
   const fans=VISITORS.filter(v=>(v.followup||'').toLowerCase().includes('fan')).length;
+  const males=VISITORS.filter(v=>v.gender==='male').length;
+  const females=VISITORS.filter(v=>v.gender==='female').length;
   const max=byCountry[0]?byCountry[0][1]:1;
   const maxL=byLoc[0]?byLoc[0][1]:1;
   const recent=[...VISITORS].sort((a,b)=>(b.created_at||'').localeCompare(a.created_at||'')).slice(0,6);
@@ -507,6 +567,7 @@ function renderDashboard(){
     <div class="stat gold"><div class="num">${byCountry.length}</div><div class="lbl">${t('countries')}</div></div>
     <div class="stat blue"><div class="num">${withPhone}</div><div class="lbl">${t('withPhone')}</div></div>
     <div class="stat blue"><div class="num">${withEmail}</div><div class="lbl">${t('withEmail')}</div></div>
+    <div class="stat"><div class="num">${males} / ${females}</div><div class="lbl">${t('male')} / ${t('female')}</div></div>
     <div class="stat gold"><div class="num">${fans}</div><div class="lbl">${t('sfcFans')}</div></div>
   </div>
   <div class="two-col">
@@ -543,6 +604,10 @@ function filtered(){
     if(FILTER.contact==='phone'&&!v.phone)return false;
     if(FILTER.contact==='email'&&!v.email)return false;
     if(FILTER.contact==='none'&&(v.phone||v.email))return false;
+    if(FILTER.gender==='__none'){ if((v.gender||'')!=='')return false; }
+    else if(FILTER.gender&&v.gender!==FILTER.gender)return false;
+    if(FILTER.dfrom&&(!v.visit_date||v.visit_date<FILTER.dfrom))return false;
+    if(FILTER.dto&&(!v.visit_date||v.visit_date>FILTER.dto))return false;
     if(FILTER.followup&&!(v.followup||''))return false;
     if(q){
       const hay=[v.name,v.job,v.company,v.country,v.location,v.phone,v.email,v.followup,v.notes].join(' ').toLowerCase();
@@ -572,14 +637,22 @@ function renderVisitors(){
       <option value="email" ${FILTER.contact==='email'?'selected':''}>${t('hasEmail')}</option>
       <option value="none" ${FILTER.contact==='none'?'selected':''}>${t('noContact')}</option>
     </select>
-    <button class="btn btn-ghost btn-sm" onclick="FILTER={q:'',country:'',location:'',contact:'',followup:''};renderVisitors()">${t('clear')}</button>
+    <select id="fG" onchange="FILTER.gender=this.value;refreshTable()">
+      <option value="">${t('gender')}: ${t('allGenders')}</option>
+      <option value="male" ${FILTER.gender==='male'?'selected':''}>${t('male')}</option>
+      <option value="female" ${FILTER.gender==='female'?'selected':''}>${t('female')}</option>
+      <option value="__none" ${FILTER.gender==='__none'?'selected':''}>${t('unspecified')}</option>
+    </select>
+    <label class="date-flt">${t('dateFrom')}<input type="date" id="fFrom" value="${esc(FILTER.dfrom)}" onchange="FILTER.dfrom=this.value;refreshTable()"></label>
+    <label class="date-flt">${t('dateTo')}<input type="date" id="fTo" value="${esc(FILTER.dto)}" onchange="FILTER.dto=this.value;refreshTable()"></label>
+    <button class="btn btn-ghost btn-sm" onclick="FILTER={q:'',country:'',location:'',contact:'',followup:'',gender:'',dfrom:'',dto:''};renderVisitors()">${t('clear')}</button>
     <span class="count-chip" id="countChip">${rows.length} ${t('results')}</span>
     <div style="flex:1"></div>
     <button class="btn btn-ghost" onclick="exportCsv()">${icon('download')}${t('exportCsv')}</button>
     ${canEdit?`<button class="btn btn-primary" onclick="openModal()">${icon('plus')}${t('addVisitor')}</button>`:''}
   </div>
   <div class="tbl-wrap"><table class="tbl"><thead><tr>
-    <th>${t('name')}</th><th>${t('job')}</th><th>${t('company')}</th><th>${t('country')}</th>
+    <th>${t('name')}</th><th>${t('gender')}</th><th>${t('job')}</th><th>${t('company')}</th><th>${t('country')}</th>
     <th>${t('location')}</th><th>${t('phone')}</th><th>${t('emailCol')}</th><th class="nowrap">${t('visitDate')}</th><th>${t('followup')}</th>
     ${canEdit?`<th>${t('actions')}</th>`:''}
   </tr></thead><tbody id="vBody"></tbody></table></div>`;
@@ -594,6 +667,7 @@ function paintRows(){
   const rows=filtered();
   document.getElementById('vBody').innerHTML=rows.length?rows.map(v=>`<tr>
     <td><b>${esc(v.name)}</b></td>
+    <td>${v.gender?`<span class="tag ${v.gender==='female'?'pink':'blue'}">${t(v.gender)}</span>`:'<span class="muted">—</span>'}</td>
     <td class="muted">${esc(v.job)}</td>
     <td class="muted">${esc(v.company)}</td>
     <td><span class="tag">${esc(v.country)}</span></td>
@@ -606,7 +680,7 @@ function paintRows(){
       <button class="icon-btn" onclick="openModal('${v.id}')" title="${t('editVisitor')}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS.edit}</svg></button>
       ${ME.role==='admin'?`<button class="icon-btn del" onclick="delVisitor('${v.id}')" title="✕"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS.trash}</svg></button>`:''}
     </div></td>`:''}
-  </tr>`).join(''):`<tr><td colspan="10" style="text-align:center;padding:26px" class="muted">${t('noResults')}</td></tr>`;
+  </tr>`).join(''):`<tr><td colspan="11" style="text-align:center;padding:26px" class="muted">${t('noResults')}</td></tr>`;
 }
 
 /* ---- add / edit modal ---- */
@@ -620,6 +694,12 @@ function openModal(id){
       <div class="mgrid">
         ${fields.map(([f,lbl])=>`<div class="field"><label>${t(lbl)}${f==='name'?' *':''}</label>
           <input id="m_${f}" value="${esc(v[f]||'')}" ${f==='country'?'list="countryList"':''} ${(f==='phone'||f==='email')?'dir="ltr"':''}></div>`).join('')}
+        <div class="field"><label>${t('gender')}</label>
+          <select id="m_gender">
+            <option value="" ${!v.gender?'selected':''}>${t('unspecified')}</option>
+            <option value="male" ${v.gender==='male'?'selected':''}>${t('male')}</option>
+            <option value="female" ${v.gender==='female'?'selected':''}>${t('female')}</option>
+          </select></div>
         <div class="field"><label>${t('visitDate')}</label><input id="m_visit_date" type="text" inputmode="numeric" dir="ltr" placeholder="dd/mm/yy" maxlength="10" oninput="maskDate(this)" value="${esc(fmtDate(v.visit_date))}"></div>
       </div>
       <div class="field"><label>${t('notes')}</label><textarea id="m_notes">${esc(v.notes||'')}</textarea></div>
@@ -637,7 +717,7 @@ async function saveVisitor(id){
   const vd=parseDate(g('visit_date'));
   if(vd===null){toast(t('badDate'));return;}
   const rec={name:g('name'),job:g('job'),company:g('company'),country:g('country')||'Unknown',
-    location:g('location'),phone:g('phone'),email:g('email'),followup:g('followup'),
+    location:g('location'),phone:g('phone'),email:g('email'),followup:g('followup'),gender:g('gender'),
     notes:g('notes'),visit_date:vd||null,updated_at:new Date().toISOString()};
   if(!rec.name){toast(t('nameReq'));return;}
   let error;
@@ -661,12 +741,16 @@ async function delVisitor(id){
 /* ---- CSV export ---- */
 function exportCsv(){
   const rows=filtered();
-  const cols=[['name',t('name')],['job',t('job')],['company',t('company')],['country',t('country')],
+  const cols=[['name',t('name')],['gender',t('gender')],['job',t('job')],['company',t('company')],['country',t('country')],
     ['location',t('location')],['phone',t('phone')],['email',t('emailCol')],['followup',t('followup')],
     ['notes',t('notes')],['visit_date',t('visitDate')]];
   const q=s=>{s=String(s??'');return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;};
   const csv='\ufeff'+cols.map(c=>q(c[1])).join(',')+'\n'
-    +rows.map(v=>cols.map(c=>q(c[0]==='visit_date'?fmtDate(v.visit_date):v[c[0]])).join(',')).join('\n');
+    +rows.map(v=>cols.map(c=>{
+        if(c[0]==='visit_date')return q(fmtDate(v.visit_date));
+        if(c[0]==='gender')return q(v.gender?t(v.gender):'');
+        return q(v[c[0]]);
+      }).join(',')).join('\n');
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
   a.download='AlQara_Visitors_'+fmtDate(new Date().toISOString()).replace(/\//g,'-')+'.csv';
